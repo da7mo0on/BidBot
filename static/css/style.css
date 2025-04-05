@@ -374,7 +374,7 @@ header h1 {
 
 /* Layover Colors */
 .layover-span {
-    padding: 2px 4px;
+    padding: 1px 2px;
     border-radius: 3px;
     display: inline-block;
 }
@@ -468,7 +468,13 @@ header h1 {
     padding: 20px;
     max-height: 60vh;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important; /* إضافة لتحسين التمرير على الآيباد */
+    -webkit-overflow-scrolling: touch !important;
+    position: relative !important;
+    z-index: 1050 !important;
+}
+
+#filtersModal {
+    z-index: 1040 !important;
 }
 
 #filtersModal .modal-footer {
@@ -651,17 +657,29 @@ header h1 {
 /* تحسين الملتي سيليكت على الآيباد */
 .multiselect-container.dropdown-menu {
     max-height: 300px !important;
-    overflow-y: auto !important;
+    overflow-y: scroll !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
+    -webkit-transform: translate3d(0, 0, 0); /* للمتصفحات القديمة */
+    transform: translate3d(0, 0, 0); /* الخاصية القياسية للمتصفحات الحديثة */
+    position: absolute !important;
+    z-index: 1055 !important;
+    width: 100% !important;
+    background-color: #fff;
 }
 
 .multiselect-container.dropdown-menu.show {
     display: block !important;
     position: absolute !important;
-    z-index: 1050 !important;
+    z-index: 1055 !important;
+}
+
+.multiselect-container.dropdown-menu ul {
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
 }
 
 .multiselect-container.dropdown-menu li {
     padding: 5px 10px;
+    touch-action: pan-y !important;
 }
