@@ -313,6 +313,7 @@ header h1 {
     color: white;
     cursor: pointer;
     position: relative;
+    font-size: 12px; /* حجم الخط المطلوب */
 }
 
 .lines-table th:hover {
