@@ -165,6 +165,7 @@ header h1 {
 /* Lines Section */
 .lines-section {
     padding: 20px;
+    margin: 0; /* التأكد من إزالة أي هوامش */
 }
 
 .controls {
@@ -191,7 +192,7 @@ header h1 {
     background-color: white;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    margin-bottom: 0;
     overflow-x: auto;
     white-space: nowrap;
     width: 100%;
@@ -296,6 +297,10 @@ header h1 {
     top: 108px; /* يجب أن يكون أسفل جدول الأيام، افترضنا أن ارتفاع جدول الأيام 60px */
     z-index: 10;
     background-color: #1a3c5e; /* للتأكد من أن الخلفية لا تختفي */
+}
+
+#lines-section > div {
+    margin: 0; /* إزالة أي هوامش بين العناصر الفرعية */
 }
 
 .lines-table th,
@@ -633,3 +638,15 @@ header h1 {
     background-color: #d32f2f; /* لون أحمر أغمق عند الـ hover */
 }
 
+.dragging {
+    opacity: 0.5; /* تقليل الشفافية أثناء السحب */
+    background-color: #e0e0e0; /* لون خلفية للتمييز */
+}
+
+/* منع تحديد النص أثناء اللمس */
+#bid-lines-table-body tr {
+    -webkit-user-select: none; /* منع التحديد على Safari */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

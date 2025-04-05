@@ -1161,41 +1161,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function attachBidDragListeners() {
         const bidLinesTableBody = document.getElementById('bid-lines-table-body');
-        let draggedRow;
+        let draggedRow = null;
         let placeholder = null;
         let lastTargetRow = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
     
-        bidLinesTableBody.addEventListener('dragstart', e => {
+        // دعم أجهزة الماوس (Drag and Drop)
+        bidLinesTableBody.addEventListener('dragstart', (e) => {
             draggedRow = e.target.closest('tr');
             e.dataTransfer.effectAllowed = 'move';
-            // إنشاء العنصر الوهمي (placeholder)
             placeholder = document.createElement('tr');
             placeholder.className = 'drag-placeholder';
-            placeholder.innerHTML = '<td colspan="12"></td>'; // نفس عدد الأعمدة في الجدول
+            placeholder.innerHTML = '<td colspan="12"></td>';
         });
     
-        bidLinesTableBody.addEventListener('dragover', e => {
-            e.preventDefault(); // منع السلوك الافتراضي دائمًا داخل الجدول
+        bidLinesTableBody.addEventListener('dragover', (e) => {
+            e.preventDefault();
             const targetRow = e.target.closest('tr');
             if (targetRow && targetRow !== draggedRow && !targetRow.classList.contains('details-row')) {
-                // تجنب التحديث المتكرر لنفس الصف لتقليل التقطع
                 if (lastTargetRow !== targetRow) {
                     lastTargetRow = targetRow;
-                    // إزالة العنصر الوهمي إذا كان موجودًا
                     if (placeholder && placeholder.parentNode) {
                         placeholder.parentNode.removeChild(placeholder);
                     }
-                    // تحديد مكان الإدراج بناءً على موقع المؤشر
                     const rect = targetRow.getBoundingClientRect();
                     const midY = rect.top + (rect.height / 2);
                     if (e.clientY < midY) {
-                        // إذا كان المؤشر في النصف العلوي من الصف، أدرج الـ placeholder قبله
                         targetRow.parentNode.insertBefore(placeholder, targetRow);
                     } else {
-                        // إذا كان المؤشر في النصف السفلي من الصف، أدرج الـ placeholder بعده
                         targetRow.parentNode.insertBefore(placeholder, targetRow.nextSibling);
                     }
-                    // إضافة كلاس لتفعيل تأثير الظهور
                     setTimeout(() => {
                         placeholder.classList.add('visible');
                     }, 10);
@@ -1203,16 +1199,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     
-        bidLinesTableBody.addEventListener('dragleave', e => {
-            // إزالة العنصر الوهمي عند مغادرة منطقة السحب
+        bidLinesTableBody.addEventListener('dragleave', (e) => {
             if (placeholder && placeholder.parentNode) {
                 placeholder.parentNode.removeChild(placeholder);
             }
             lastTargetRow = null;
         });
     
-        bidLinesTableBody.addEventListener('dragend', e => {
-            // إزالة العنصر الوهمي عند انتهاء السحب
+        bidLinesTableBody.addEventListener('dragend', (e) => {
             if (placeholder && placeholder.parentNode) {
                 placeholder.parentNode.removeChild(placeholder);
             }
@@ -1220,14 +1214,11 @@ document.addEventListener('DOMContentLoaded', () => {
             lastTargetRow = null;
         });
     
-        bidLinesTableBody.addEventListener('drop', e => {
+        bidLinesTableBody.addEventListener('drop', (e) => {
             e.preventDefault();
             const targetRow = e.target.closest('tr');
             if (targetRow && draggedRow !== targetRow && !targetRow.classList.contains('details-row')) {
-                // إغلاق جميع صفوف التفاصيل المفتوحة في الجدول
                 document.querySelectorAll('.details-row').forEach(detailsRow => detailsRow.remove());
-    
-                // نقل الصف الأصلي إلى مكان العنصر الوهمي
                 if (placeholder && placeholder.parentNode) {
                     placeholder.parentNode.insertBefore(draggedRow, placeholder);
                     placeholder.parentNode.removeChild(placeholder);
@@ -1236,6 +1227,66 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastTargetRow = null;
                 updateCopyLines();
             }
+        });
+    
+        // دعم أجهزة اللمس (Touch Devices مثل الآيباد)
+        bidLinesTableBody.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            draggedRow = e.target.closest('tr');
+            if (draggedRow) {
+                draggedRow.classList.add('dragging'); // إضافة كلاس لتحديد الصف اللي بيتحرك
+                placeholder = document.createElement('tr');
+                placeholder.className = 'drag-placeholder';
+                placeholder.innerHTML = '<td colspan="12"></td>';
+            }
+        });
+    
+        bidLinesTableBody.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // منع التمرير الافتراضي أثناء اللمس
+            const touch = e.touches[0];
+            const touchX = touch.clientX;
+            const touchY = touch.clientY;
+    
+            const targetRow = document.elementFromPoint(touchX, touchY)?.closest('tr');
+            if (targetRow && targetRow !== draggedRow && !targetRow.classList.contains('details-row')) {
+                if (lastTargetRow !== targetRow) {
+                    lastTargetRow = targetRow;
+                    if (placeholder && placeholder.parentNode) {
+                        placeholder.parentNode.removeChild(placeholder);
+                    }
+                    const rect = targetRow.getBoundingClientRect();
+                    const midY = rect.top + (rect.height / 2);
+                    if (touchY < midY) {
+                        targetRow.parentNode.insertBefore(placeholder, targetRow);
+                    } else {
+                        targetRow.parentNode.insertBefore(placeholder, targetRow.nextSibling);
+                    }
+                    setTimeout(() => {
+                        placeholder.classList.add('visible');
+                    }, 10);
+                }
+            }
+        });
+    
+        bidLinesTableBody.addEventListener('touchend', (e) => {
+            if (draggedRow && placeholder && placeholder.parentNode) {
+                const touch = e.changedTouches[0];
+                const touchX = touch.clientX;
+                const touchY = touch.clientY;
+                const targetRow = document.elementFromPoint(touchX, touchY)?.closest('tr');
+                if (targetRow && draggedRow !== targetRow && !targetRow.classList.contains('details-row')) {
+                    document.querySelectorAll('.details-row').forEach(detailsRow => detailsRow.remove());
+                    placeholder.parentNode.insertBefore(draggedRow, placeholder);
+                    placeholder.parentNode.removeChild(placeholder);
+                    updateCopyLines();
+                }
+            }
+            draggedRow?.classList.remove('dragging');
+            draggedRow = null;
+            placeholder = null;
+            lastTargetRow = null;
         });
     }
 
