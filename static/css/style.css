@@ -373,7 +373,7 @@ header h1 {
 
 /* Layover Colors */
 .layover-span {
-    padding: 2px 5px;
+    padding: 2px 4px;
     border-radius: 3px;
     display: inline-block;
 }
@@ -466,7 +466,8 @@ header h1 {
 #filtersModal .modal-body {
     padding: 20px;
     max-height: 60vh;
-    overflow-y: auto;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important; /* إضافة لتحسين التمرير على الآيباد */
 }
 
 #filtersModal .modal-footer {
@@ -644,4 +645,22 @@ header h1 {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+/* تحسين الملتي سيليكت على الآيباد */
+.multiselect-container.dropdown-menu {
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+}
+
+.multiselect-container.dropdown-menu.show {
+    display: block !important;
+    position: absolute !important;
+    z-index: 1050 !important;
+}
+
+.multiselect-container.dropdown-menu li {
+    padding: 5px 10px;
 }
