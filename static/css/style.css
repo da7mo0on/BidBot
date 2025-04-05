@@ -664,12 +664,17 @@ header h1 {
     overflow-y: scroll !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
-    -webkit-transform: translate3d(0, 0, 0); /* للمتصفحات القديمة */
-    transform: translate3d(0, 0, 0); /* الخاصية القياسية للمتصفحات الحديثة */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
     position: absolute !important;
     z-index: 1060 !important;
     width: 100% !important;
     background-color: #fff;
+    /* تعديل السطر */
+    -webkit-user-select: none !important; /* للمتصفحات القديمة */
+    user-select: none !important; /* الخاصية القياسية */
+    overscroll-behavior: contain !important;
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 .multiselect-container.dropdown-menu.show {
@@ -681,9 +686,14 @@ header h1 {
 .multiselect-container.dropdown-menu ul {
     overflow-y: scroll !important;
     -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    height: 100% !important; /* التأكد من إن العنصر يأخذ الارتفاع الكامل */
 }
 
 .multiselect-container.dropdown-menu li {
     padding: 5px 10px;
     touch-action: pan-y !important;
+    /* تعديل السطر */
+    -webkit-user-select: none !important; /* للمتصفحات القديمة */
+    user-select: none !important; /* الخاصية القياسية */
 }
