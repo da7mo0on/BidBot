@@ -745,7 +745,7 @@ header h1 {
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     z-index: 1060;
-    max-height: 200px; /* الارتفاع اللي عايزاه (مثلًا 200px) */
+    max-height: 115px; /* الارتفاع اللي عايزاه (مثلًا 200px) */
     overflow-y: auto; /* تفعيل السكرول الداخلي */
     -webkit-overflow-scrolling: touch; /* تحسين التمرير على الآيباد */
     touch-action: pan-y;
@@ -757,6 +757,7 @@ header h1 {
 
 .dropdown-options {
     padding: 5px 0;
+    min-height: 115px; /* ارتفاع أدنى للقائمة لو كانت فاضية */
 }
 
 .dropdown-option {

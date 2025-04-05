@@ -749,16 +749,22 @@ document.addEventListener('DOMContentLoaded', () => {
             pairings: JSON.parse(row.dataset.pairings || '[]')
         }));
     
-        const selectedLineTypes = $('#line-types').val() || [];
+        // جلب الخيارات المحددة من القوائم المخصصة
+        const selectedLineTypes = Array.from(document.querySelectorAll('#line-types-options input[type="checkbox"]:checked'))
+            .map(checkbox => checkbox.value);
         const hideCarryover = document.getElementById('hide-carryover').checked;
         const hideDeadhead = document.getElementById('hide-deadhead').checked;
         const weekendsOff = document.getElementById('weekends-off').checked;
-        const desiredLayovers = $('#desired-layovers').val() || [];
-        const layoverLengths = $('#layover-length').val() || [];
-        const excludedDestinations = $('#excluded-destinations').val() || [];
+        const desiredLayovers = Array.from(document.querySelectorAll('#desired-layovers-options input[type="checkbox"]:checked'))
+            .map(checkbox => checkbox.value);
+        const layoverLengths = Array.from(document.querySelectorAll('#layover-length-options input[type="checkbox"]:checked'))
+            .map(checkbox => checkbox.value);
+        const excludedDestinations = Array.from(document.querySelectorAll('#excluded-destinations-options input[type="checkbox"]:checked'))
+            .map(checkbox => checkbox.value);
         const [blockHoursMin, blockHoursMax] = document.getElementById('block-hours-slider').noUiSlider.get().map(Number);
         const [daysOffMin, daysOffMax] = document.getElementById('days-off-slider').noUiSlider.get().map(Number);
-        const desiredDaysOff = $('#desired-days-off').val().map(Number) || [];
+        const desiredDaysOff = Array.from(document.querySelectorAll('#desired-days-off-options input[type="checkbox"]:checked'))
+            .map(checkbox => Number(checkbox.value));
         const [reportTimeMin, reportTimeMax] = document.getElementById('report-time-slider').noUiSlider.get().map(Number);
         const [fourLegsMin, fourLegsMax] = document.getElementById('four-legs-slider').noUiSlider.get().map(Number);
         const [pairingsMin, pairingsMax] = document.getElementById('pairings-slider').noUiSlider.get().map(Number);
@@ -871,22 +877,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('reset-filters').addEventListener('click', () => {
-        $('#line-types').multiselect('deselectAll', false).multiselect('refresh');
+        // إلغاء تحديد كل الخيارات في القوائم المخصصة
+        const dropdowns = document.querySelectorAll('.custom-dropdown');
+        dropdowns.forEach(dropdown => {
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            const selectedText = dropdown.querySelector('.selected-text');
+            const clearBtn = dropdown.querySelector('.clear-btn');
+            selectedText.textContent = dropdown.querySelector('.dropdown-toggle').dataset.defaultText || 'Choose Options';
+            clearBtn.style.display = 'none';
+        });
+    
+        // إلغاء تحديد الـ Checkboxes
         document.getElementById('hide-carryover').checked = false;
         document.getElementById('hide-deadhead').checked = false;
         document.getElementById('weekends-off').checked = false;
-        $('#desired-layovers').multiselect('deselectAll', false).multiselect('refresh');
-        $('#layover-length').multiselect('deselectAll', false).multiselect('refresh');
-        $('#excluded-destinations').multiselect('deselectAll', false).multiselect('refresh');
+    
+        // إعادة ضبط الـ Sliders
         document.getElementById('block-hours-slider').noUiSlider.reset();
         document.getElementById('days-off-slider').noUiSlider.reset();
-        $('#desired-days-off').multiselect('deselectAll', false).multiselect('refresh');
         document.getElementById('report-time-slider').noUiSlider.reset();
         document.getElementById('four-legs-slider').noUiSlider.reset();
         document.getElementById('pairings-slider').noUiSlider.reset();
         document.getElementById('total-legs-slider').noUiSlider.reset();
         document.getElementById('min-rest-slider').noUiSlider.reset();
-
+    
+        // إعادة ضبط الجدول
         linesTableBody.innerHTML = '';
         originalRows.forEach(row => linesTableBody.appendChild(row));
         attachRowListeners();
