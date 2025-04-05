@@ -470,11 +470,15 @@ header h1 {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     position: relative !important;
-    z-index: 1050 !important;
+    z-index: 1055 !important;
+}
+
+.modal-backdrop {
+    z-index: 1045 !important; /* أقل من المودال */
 }
 
 #filtersModal {
-    z-index: 1040 !important;
+    z-index: 1050 !important;
 }
 
 #filtersModal .modal-footer {
@@ -663,7 +667,7 @@ header h1 {
     -webkit-transform: translate3d(0, 0, 0); /* للمتصفحات القديمة */
     transform: translate3d(0, 0, 0); /* الخاصية القياسية للمتصفحات الحديثة */
     position: absolute !important;
-    z-index: 1055 !important;
+    z-index: 1060 !important;
     width: 100% !important;
     background-color: #fff;
 }
@@ -671,7 +675,7 @@ header h1 {
 .multiselect-container.dropdown-menu.show {
     display: block !important;
     position: absolute !important;
-    z-index: 1055 !important;
+    z-index: 1060 !important;
 }
 
 .multiselect-container.dropdown-menu ul {
