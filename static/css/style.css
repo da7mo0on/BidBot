@@ -165,7 +165,6 @@ header h1 {
 /* Lines Section */
 .lines-section {
     padding: 20px;
-    margin: 0; /* التأكد من إزالة أي هوامش */
 }
 
 .controls {
@@ -192,7 +191,7 @@ header h1 {
     background-color: white;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 0;
+    margin-bottom: 20px;
     overflow-x: auto;
     white-space: nowrap;
     width: 100%;
@@ -294,13 +293,9 @@ header h1 {
 
 .lines-table thead {
     position: sticky;
-    top: 108px; /* يجب أن يكون أسفل جدول الأيام، افترضنا أن ارتفاع جدول الأيام 60px */
+    top: 90px; /* يجب أن يكون أسفل جدول الأيام، افترضنا أن ارتفاع جدول الأيام 60px */
     z-index: 10;
     background-color: #1a3c5e; /* للتأكد من أن الخلفية لا تختفي */
-}
-
-#lines-section > div {
-    margin: 0; /* إزالة أي هوامش بين العناصر الفرعية */
 }
 
 .lines-table th,
