@@ -697,3 +697,99 @@ header h1 {
     -webkit-user-select: none !important; /* للمتصفحات القديمة */
     user-select: none !important; /* الخاصية القياسية */
 }
+
+
+/* تنسيق القائمة المنسدلة المخصصة */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.dropdown-toggle {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+.dropdown-toggle .selected-text {
+    flex-grow: 1;
+}
+
+.dropdown-toggle .clear-btn {
+    margin-left: 10px;
+    font-size: 16px;
+    color: #f44336;
+    cursor: pointer;
+}
+
+.dropdown-toggle .caret {
+    font-size: 12px;
+    color: #1a3c5e;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1060;
+    max-height: 300px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-options {
+    padding: 5px 0;
+}
+
+.dropdown-option {
+    display: block;
+    padding: 5px 10px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+.dropdown-option:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown-option input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* تحسين التمرير على الآيباد */
+.dropdown-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+    background: #1a3c5e;
+    border-radius: 5px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: #2a5c8e;
+}

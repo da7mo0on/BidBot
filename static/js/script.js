@@ -554,11 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateFilterOptions() {
-        if (typeof $.fn.multiselect === 'undefined') {
-            console.error("Bootstrap Multiselect is not loaded!");
-            return;
-        }
-    
         const lines = Array.from(linesTableBody.querySelectorAll('tr')).map(row => JSON.parse(row.dataset.line || '{}'));
         const pairingsData = Array.from(linesTableBody.querySelectorAll('tr')).map(row => JSON.parse(row.dataset.pairings || '[]'));
         
@@ -569,42 +564,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // 1. Line Types (ترتيب أبجدي)
         const lineTypes = [...new Set(lines.map(line => line.type).filter(type => type && type !== '-'))].sort();
-        const lineTypesSelect = $('#line-types');
-        lineTypesSelect.empty();
+        const lineTypesOptions = document.getElementById('line-types-options');
+        lineTypesOptions.innerHTML = '';
         lineTypes.forEach(type => {
-            lineTypesSelect.append(`<option value="${type}">${type}</option>`);
+            const label = document.createElement('label');
+            label.className = 'dropdown-option';
+            label.innerHTML = `
+                <input type="checkbox" value="${type}">
+                ${type}
+            `;
+            lineTypesOptions.appendChild(label);
         });
-        lineTypesSelect.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            buttonWidth: '100%',
-            maxHeight: 300,
-            nonSelectedText: 'Choose Line(s) Type(s)',
-            buttonText: function(options, select) {
-                if (options.length === 0) {
-                    return 'Choose Line(s) Type(s)';
-                } else if (options.length === select.children('option').length) {
-                    return 'All selected';
-                } else {
-                    var selected = [];
-                    options.each(function() {
-                        selected.push($(this).text());
-                    });
-                    return selected.join(', ');
-                }
-            },
-            templates: {
-                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span> <b class="caret"></b><span class="clear-btn" style="float: right; margin-left: 5px; cursor: pointer;">×</span></button>'
-            },
-            onInitialized: function(select, container) {
-                $(container).find('.clear-btn').on('click', function(e) {
-                    e.stopPropagation();
-                    lineTypesSelect.multiselect('deselectAll', false);
-                    lineTypesSelect.multiselect('refresh');
-                });
-            }
-        });
-
     
         // 2. Desired Layovers (ترتيب أبجدي)
         const allLayovers = new Set();
@@ -617,119 +587,39 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         const sortedLayovers = [...allLayovers].sort();
-        const layoversSelect = $('#desired-layovers');
-        layoversSelect.empty();
+        const layoversOptions = document.getElementById('desired-layovers-options');
+        layoversOptions.innerHTML = '';
         sortedLayovers.forEach(city => {
-            layoversSelect.append(`<option value="${city}">${city}</option>`);
+            const label = document.createElement('label');
+            label.className = 'dropdown-option';
+            label.innerHTML = `
+                <input type="checkbox" value="${city}">
+                ${city}
+            `;
+            layoversOptions.appendChild(label);
         });
-        layoversSelect.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            buttonWidth: '100%',
-            maxHeight: 300,
-            nonSelectedText: 'Choose Desired Layover(s)',
-            buttonText: function(options, select) {
-                if (options.length === 0) {
-                    return 'Choose Desired Layover(s)';
-                } else if (options.length === select.children('option').length) {
-                    return 'All selected';
-                } else {
-                    var selected = [];
-                    options.each(function() {
-                        selected.push($(this).text());
-                    });
-                    return selected.join(', ');
-                }
-            },
-            templates: {
-                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span> <b class="caret"></b><span class="clear-btn" style="float: right; margin-left: 5px; cursor: pointer;">×</span></button>'
-            },
-            onInitialized: function(select, container) {
-                $(container).find('.clear-btn').on('click', function(e) {
-                    e.stopPropagation();
-                    layoversSelect.multiselect('deselectAll', false);
-                    layoversSelect.multiselect('refresh');
-                });
-            }
-        });
-
     
         // 3. Layover Length
-        const layoverLengthSelect = $('#layover-length');
-        layoverLengthSelect.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            buttonWidth: '100%',
-            maxHeight: 300,
-            nonSelectedText: 'Choose Desired Layover Length',
-            buttonText: function(options, select) {
-                if (options.length === 0) {
-                    return 'Choose Desired Layover Length';
-                } else if (options.length === select.children('option').length) {
-                    return 'All selected';
-                } else {
-                    var selected = [];
-                    options.each(function() {
-                        selected.push($(this).text());
-                    });
-                    return selected.join(', ');
-                }
-            },
-            templates: {
-                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span> <b class="caret"></b><span class="clear-btn" style="float: right; margin-left: 5px; cursor: pointer;">×</span></button>'
-            },
-            onInitialized: function(select, container) {
-                $(container).find('.clear-btn').on('click', function(e) {
-                    e.stopPropagation();
-                    layoverLengthSelect.multiselect('deselectAll', false);
-                    layoverLengthSelect.multiselect('refresh');
-                });
-            }
-        });
-
+        // (معرفة في HTML، ما بنحتاجش نعدل هنا)
     
         // 4. Excluded Destinations (ترتيب أبجدي)
         const allDestinations = new Set(lines.flatMap(line => line.destinations || []));
         const sortedDestinations = [...allDestinations].sort();
-        const destinationsSelect = $('#excluded-destinations');
-        destinationsSelect.empty();
+        const destinationsOptions = document.getElementById('excluded-destinations-options');
+        destinationsOptions.innerHTML = '';
         sortedDestinations.forEach(dest => {
-            destinationsSelect.append(`<option value="${dest}">${dest}</option>`);
-        });
-        destinationsSelect.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            buttonWidth: '100%',
-            maxHeight: 300,
-            nonSelectedText: 'Choose Excluded Destination(s)',
-            buttonText: function(options, select) {
-                if (options.length === 0) {
-                    return 'Choose Excluded Destination(s)';
-                } else if (options.length === select.children('option').length) {
-                    return 'All selected';
-                } else {
-                    var selected = [];
-                    options.each(function() {
-                        selected.push($(this).text());
-                    });
-                    return selected.join(', ');
-                }
-            },
-            templates: {
-                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span> <b class="caret"></b><span class="clear-btn" style="float: right; margin-left: 5px; cursor: pointer;">×</span></button>'
-            },
-            onInitialized: function(select, container) {
-                $(container).find('.clear-btn').on('click', function(e) {
-                    e.stopPropagation();
-                    destinationsSelect.multiselect('deselectAll', false);
-                    destinationsSelect.multiselect('refresh');
-                });
-            }
+            const label = document.createElement('label');
+            label.className = 'dropdown-option';
+            label.innerHTML = `
+                <input type="checkbox" value="${dest}">
+                ${dest}
+            `;
+            destinationsOptions.appendChild(label);
         });
     
         // 5. Desired Days Off
-        const daysOffSelect = $('#desired-days-off');
-        daysOffSelect.empty();
+        const daysOffOptions = document.getElementById('desired-days-off-options');
+        daysOffOptions.innerHTML = '';
         const dateElements = document.querySelectorAll('.duty-timeline-header .day span');
         const dateList = Array.from(dateElements).map((span, index) => {
             const dayNum = span.firstChild.textContent.trim().padStart(2, '0');
@@ -737,37 +627,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return `${dayNum}-${weekday}`;
         });
         dateList.forEach((date, index) => {
-            daysOffSelect.append(`<option value="${index + 1}">${date}</option>`);
-        });
-        daysOffSelect.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            buttonWidth: '100%',
-            maxHeight: 300,
-            nonSelectedText: 'Choose Desired Day(s) Off',
-            buttonText: function(options, select) {
-                if (options.length === 0) {
-                    return 'Choose Desired Day(s) Off';
-                } else if (options.length === select.children('option').length) {
-                    return 'All selected';
-                } else {
-                    var selected = [];
-                    options.each(function() {
-                        selected.push($(this).text());
-                    });
-                    return selected.join(', ');
-                }
-            },
-            templates: {
-                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span> <b class="caret"></b><span class="clear-btn" style="float: right; margin-left: 5px; cursor: pointer;">×</span></button>'
-            },
-            onInitialized: function(select, container) {
-                $(container).find('.clear-btn').on('click', function(e) {
-                    e.stopPropagation();
-                    daysOffSelect.multiselect('deselectAll', false);
-                    daysOffSelect.multiselect('refresh');
-                });
-            }
+            const label = document.createElement('label');
+            label.className = 'dropdown-option';
+            label.innerHTML = `
+                <input type="checkbox" value="${index + 1}">
+                ${date}
+            `;
+            daysOffOptions.appendChild(label);
         });
     
         // الكود الخاص بالـ Sliders (بدون تغيير)
@@ -803,6 +669,75 @@ document.addEventListener('DOMContentLoaded', () => {
                     const [min, max] = value.map(Number);
                     document.getElementById(slider.label).textContent = slider.format ? `${slider.format(min)} - ${slider.format(max)}${slider.unit}` : `${min} - ${max}${slider.unit}`;
                 }
+            });
+        });
+    
+        // إضافة مستمعات الأحداث للقوائم المخصصة
+        setupCustomDropdowns();
+    }
+
+    function setupCustomDropdowns() {
+        const dropdowns = document.querySelectorAll('.custom-dropdown');
+        dropdowns.forEach(dropdown => {
+            const toggle = dropdown.querySelector('.dropdown-toggle');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            const optionsContainer = dropdown.querySelector('.dropdown-options');
+            const selectedText = toggle.querySelector('.selected-text');
+            const clearBtn = toggle.querySelector('.clear-btn');
+            const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+    
+            // فتح/إغلاق القائمة
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = menu.classList.contains('show');
+                // إغلاق كل القوائم الأخرى
+                document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
+                    if (openMenu !== menu) openMenu.classList.remove('show');
+                });
+                // فتح/إغلاق القائمة الحالية
+                menu.classList.toggle('show', !isOpen);
+            });
+    
+            // إغلاق القائمة لما تضغطي برا
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    menu.classList.remove('show');
+                }
+            });
+    
+            // تحديث النص المختار
+            function updateSelectedText() {
+                const selectedOptions = Array.from(checkboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.parentElement.textContent.trim());
+                if (selectedOptions.length === 0) {
+                    selectedText.textContent = toggle.dataset.defaultText || 'Choose Options';
+                    clearBtn.style.display = 'none';
+                } else if (selectedOptions.length === checkboxes.length) {
+                    selectedText.textContent = 'All selected';
+                    clearBtn.style.display = 'inline';
+                } else {
+                    selectedText.textContent = selectedOptions.join(', ');
+                    clearBtn.style.display = 'inline';
+                }
+            }
+    
+            // تحديث النص عند التحميل
+            toggle.dataset.defaultText = selectedText.textContent;
+            updateSelectedText();
+    
+            // مستمع لتغيير الخيارات
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectedText);
+            });
+    
+            // زر الإلغاء
+            clearBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updateSelectedText();
             });
         });
     }
