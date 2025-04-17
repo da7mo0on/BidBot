@@ -63,16 +63,19 @@ header {
 
 header h1 {
     font-family: 'Poppins', sans-serif;
+    font-size: 28px;
     font-weight: 600;
     margin: 0;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .separator {
+    font-size: 24px;
     color: rgba(255, 255, 255, 0.7);
 }
 
 .info-item {
+    font-size: 16px;
     font-weight: 400;
     padding: 5px 10px;
     background: rgba(255, 255, 255, 0.1);
@@ -206,6 +209,7 @@ header h1 {
 .duty-timeline-header .day {
     position: absolute;
     text-align: center;
+    font-size: 12px;
     border-right: 1px solid #ffffff33;
 }
 
@@ -243,6 +247,7 @@ header h1 {
     border-radius: 10px;
     text-align: center;
     line-height: 26px;
+    font-size: 12px;
     color: white;
     box-sizing: border-box;
 }
@@ -298,6 +303,7 @@ header h1 {
     padding: 10px;
     text-align: center;
     border-bottom: 1px solid #e0e0e0;
+    font-size: 12px; /* حجم الخط المطلوب */
 }
 
 .lines-table td:nth-child(even) {
@@ -308,6 +314,7 @@ header h1 {
     color: white;
     cursor: pointer;
     position: relative;
+    font-size: 12px; /* حجم الخط المطلوب */
 }
 
 .lines-table th:hover {
@@ -333,6 +340,7 @@ header h1 {
     margin: 5px;
     white-space: pre-wrap;
     font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
     width: 300px;
     line-height: 1.2; /* التحكم في المسافة بين الأسطر */
 }
@@ -707,6 +715,7 @@ header h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-size: 14px;
     color: #333;
     cursor: pointer;
 }
@@ -717,11 +726,13 @@ header h1 {
 
 .dropdown-toggle .clear-btn {
     margin-left: 10px;
+    font-size: 16px;
     color: #f44336;
     cursor: pointer;
 }
 
 .dropdown-toggle .caret {
+    font-size: 12px;
     color: #1a3c5e;
 }
 
@@ -754,6 +765,7 @@ header h1 {
 .dropdown-option {
     display: block;
     padding: 5px 10px;
+    font-size: 14px;
     color: #333;
     cursor: pointer;
 }
