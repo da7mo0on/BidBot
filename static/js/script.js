@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const lines = pairing.details.split('\n');
                         const layovers = [];
                         for (const line of lines) {
-                            const layoverMatch = line.match(/LAYOVER\s+(\w{3})\s+(\d{2}\.\d{2})/);
+                            const layoverMatch = line.match(/LAYOVER\s+(\w{3})\s+(\d+\.\d{2})/);
                             if (layoverMatch) {
                                 const city = layoverMatch[1];
                                 const time = layoverMatch[2];
@@ -1380,7 +1380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const lines = pairing.details.split('\n');
                         const layovers = [];
                         for (const line of lines) {
-                            const layoverMatch = line.match(/LAYOVER\s+(\w{3})\s+(\d{2}\.\d{2})/);
+                            const layoverMatch = line.match(/LAYOVER\s+(\w{3})\s+(\d+\.\d{2})/);
                             if (layoverMatch) {
                                 const city = layoverMatch[1];
                                 const time = layoverMatch[2];
