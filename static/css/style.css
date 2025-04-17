@@ -303,6 +303,7 @@ header h1 {
     padding: 10px;
     text-align: center;
     border-bottom: 1px solid #e0e0e0;
+    font-size: 13px; /* حجم الخط المطلوب */
 }
 
 .lines-table td:nth-child(even) {
@@ -313,7 +314,7 @@ header h1 {
     color: white;
     cursor: pointer;
     position: relative;
-    font-size: 12px; /* حجم الخط المطلوب */
+    font-size: 13px; /* حجم الخط المطلوب */
 }
 
 .lines-table th:hover {
