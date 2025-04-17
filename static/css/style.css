@@ -13,6 +13,10 @@ button, a, input, select, .control-btn, .duty, th[data-sort], .header-logo {
 body {
     background-color: #f4f7fa;
     color: #333;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden; /* منع أي تمرير أفقي غير ضروري */
 }
 
 /* Header */
@@ -21,15 +25,19 @@ header {
     color: white;
     height: 80px;
     position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     width: 100%;
     display: flex;
-    align-items: center; /* تمركز عمودي */
-    justify-content: center; /* تمركز أفقي */
-    padding: 0 20px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px; /* قلّلنا الـ padding للجوال */
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
     animation: fadeIn 1s ease-in-out;
+    z-index: 100; /* للتأكد إنه أعلى العناصر */
 }
 
 @keyframes fadeIn {
@@ -187,15 +195,20 @@ header h1 {
 }
 
 .duty-timeline-container {
-    position: relative;
+    position: sticky;
+    top: 80px;
+    z-index: 15;
     background-color: white;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    margin-bottom: 0;
     overflow-x: auto;
     white-space: nowrap;
     width: 100%;
     max-width: 100%;
+    padding: 0; /* إزالة أي padding خارجي */
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .duty-timeline-header {
