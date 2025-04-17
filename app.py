@@ -377,7 +377,7 @@ def build_line_dict(text_block, line_number, metadata, final_end_date):
     return result
 
 
-def extract_pairing_blocks(doc, start_page):
+def extract_pairing_blocks(doc, start_page, base):
     blocks = []
     current = []
     capture = False
@@ -388,14 +388,11 @@ def extract_pairing_blocks(doc, start_page):
                 continue
             if re.match(r"#\d{3,4}", line):
                 if capture and current:
-                    # التحقق مما إذا كان البلوك مقلوبًا
                     block_text = "\n".join(current)
-                    if is_block_inverted(block_text):
-                        # تصحيح البلوك إذا كان مقلوبًا
+                    if base and is_block_inverted(block_text, base):
                         corrected_block = correct_block_order(block_text)
                         blocks.append(corrected_block)
                     else:
-                        # إضافة البلوك كما هو إذا لم يكن مقلوبًا
                         blocks.append(block_text)
                     current = []
                 capture = True
@@ -403,7 +400,7 @@ def extract_pairing_blocks(doc, start_page):
                 current.append(line)
         if capture and current:
             block_text = "\n".join(current)
-            if is_block_inverted(block_text):
+            if base and is_block_inverted(block_text, base):
                 corrected_block = correct_block_order(block_text)
                 blocks.append(corrected_block)
             else:
@@ -412,52 +409,47 @@ def extract_pairing_blocks(doc, start_page):
             capture = False
     if current:
         block_text = "\n".join(current)
-        if is_block_inverted(block_text):
+        if base and is_block_inverted(block_text, base):
             corrected_block = correct_block_order(block_text)
             blocks.append(corrected_block)
         else:
             blocks.append(block_text)
     return blocks
 
-def is_block_inverted(block):
+def is_block_inverted(block, base):
     """
     Check if a pairing block is inverted by checking if the first flight does not start from the Base
     and the second flight starts from the Base.
     Returns True if the block is inverted, False otherwise.
     """
+    if not base:  # إذا لم تكن القاعدة متوفرة، لا نعتبر البلوك مقلوبًا
+        return False
+
     lines = block.splitlines()
     if not lines:
         return False
 
-    # جمع أول رحلتين (مع تخطي LAYOVER إذا وجد)
     flight_origins = []
     flight_count = 0
     for line in lines:
         if re.search(r"\b[A-Z]{2}\s+(?:DH)?\d{3,4}", line):
             flight_count += 1
-            # استخراج نقطة المغادرة (المدينة الأولى بعد توقيت المغادرة)
             match = re.search(r"\d{2}\.\d{2}\s+([A-Z]{3})\s+\d{2}\.\d{2}", line)
             if match:
-                origin = match.group(1)  # نقطة المغادرة (مثل JED أو LHE)
+                origin = match.group(1)  # نقطة المغادرة (مثل RUH أو JED)
                 flight_origins.append(origin)
             else:
                 flight_origins.append(None)
             if flight_count == 2:  # توقف بعد أول رحلتين
                 break
         elif "LAYOVER" in line:
-            continue  # تخطي LAYOVER
+            continue
 
-    # التحقق مما إذا كان البلوك مقلوبًا
     if len(flight_origins) < 2:
-        return False  # إذا لم يكن هناك رحلتان على الأقل، لا يمكن أن يكون مقلوبًا
+        return False
 
     first_origin = flight_origins[0]
     second_origin = flight_origins[1]
-    # يجب إضافة Base إلى line_dict في build_line_dict، لكن نفترض أنه موجود هنا
-    # نفترض أن Base هو JED (سيتم تمريره لاحقًا)
-    base = "JED"  # سيتم استبداله بـ line_dict["Base"] عند التكامل مع match_pairings
-
-    # الشرط: أول رحلة لا تبدأ من الـ Base، والرحلة الثانية تبدأ من الـ Base
     if first_origin and second_origin:
         if first_origin != base and second_origin == base:
             return True  # البلوك مقلوب
@@ -775,6 +767,7 @@ def get_first_layover_destination(block):
 def match_pairings(line_dict, pairing_blocks, pairing_index=None, use_layover_destination=False):
     matched = []
     pairing_cache = {}
+    base = line_dict.get("Base")  # استخدام Base من line_dict بدون قيمة افتراضية
 
     for p in line_dict["pairings"]:
         number = int(p["number"])
@@ -826,14 +819,13 @@ def match_pairings(line_dict, pairing_blocks, pairing_index=None, use_layover_de
             adjusted_for_less = p.get("adjusted_for_less", False)
 
             ignore_destination = False
-            if line_dict.get("user_type") in ["cabin_crew", "pilot"]:
+            if line_dict.get("user_type") in ["cabin_crew", "pilot"] and base:
                 duties = line_dict.get("duties", [])
                 period_start_dt = datetime.strptime(line_dict["Period Start"], "%d.%b.%Y")
                 pairing_start_dt = datetime.strptime(p["start_date"], "%Y-%m-%d")
                 day_offset = (pairing_start_dt - period_start_dt).days
                 if before_report and pairing_start_dt.day > 1:
                     day_offset += 1
-                base = line_dict.get("Base", "")
                 if day_offset < len(duties) and day_offset + 1 < len(duties):
                     current_duty = duties[day_offset]
                     next_duty = duties[day_offset + 1]
@@ -1115,7 +1107,8 @@ def upload_file():
                         all_lines.append(line_dict)
 
             last_line_page = max(line_pages) if line_pages else 1
-            pairing_blocks = extract_pairing_blocks(doc, last_line_page + 1)
+            base = metadata.get("Base")  # استخدام Base من الميتاداتا بدون قيمة افتراضية
+            pairing_blocks = extract_pairing_blocks(doc, last_line_page + 1, base)
 
             all_pairings = []
             line_stats = []
@@ -1131,14 +1124,17 @@ def upload_file():
                 else:
                     matched = match_pairings(line, pairing_blocks)
 
+                # تصفية البيرنقات: تجاهل أي بيرنق وجهته حرفين متبوعين برقم
+                filtered_matched = [p for p in matched if not re.match(r'^[A-Z]{2}\d$', p['destination'])]
+
                 line_total_legs = 0
                 line_deadheads = 0
                 line_four_legs = 0
                 destinations = set()
                 layovers = []
-                pairings_count = len(matched)
+                pairings_count = len(filtered_matched)
 
-                for idx, p in enumerate(matched):
+                for idx, p in enumerate(filtered_matched):
                     if p["details"] != "Not Found":
                         fd, ed = parse_pairing_times(p["details"], p["start_date"])
                         p["first_departure"] = fd.strftime("%Y-%m-%dT%H:%M") if fd else None
@@ -1172,18 +1168,18 @@ def upload_file():
                         if len(consecutive_legs) >= 4:
                             line_four_legs += 1
 
-                for i in range(len(matched) - 1):
-                    if matched[i]["end_date"] and matched[i+1]["first_departure"]:
-                        rest = datetime.strptime(matched[i+1]["first_departure"], "%Y-%m-%dT%H:%M") - datetime.strptime(matched[i]["end_date"], "%Y-%m-%dT%H:%M")
+                for i in range(len(filtered_matched) - 1):
+                    if filtered_matched[i]["end_date"] and filtered_matched[i+1]["first_departure"]:
+                        rest = datetime.strptime(filtered_matched[i+1]["first_departure"], "%Y-%m-%dT%H:%M") - datetime.strptime(filtered_matched[i]["end_date"], "%Y-%m-%dT%H:%M")
                         mins = int(rest.total_seconds() // 60)
                         h, m = divmod(mins, 60)
-                        matched[i]["minimum_rest"] = f"{h:02d}:{m:02d}" if h <= 48 else "More than 48 Hrs"
-                if matched:
-                    matched[-1]["minimum_rest"] = "—"
+                        filtered_matched[i]["minimum_rest"] = f"{h:02d}:{m:02d}" if h <= 48 else "More than 48 Hrs"
+                if filtered_matched:
+                    filtered_matched[-1]["minimum_rest"] = "—"
 
                 min_rest = "—"
                 rest_times = []
-                for pairing in matched:
+                for pairing in filtered_matched:
                     if pairing["minimum_rest"] and pairing["minimum_rest"] != "—" and "More than" not in pairing["minimum_rest"]:
                         h, m = map(int, pairing["minimum_rest"].split(":"))
                         total_minutes = h * 60 + m
@@ -1193,7 +1189,7 @@ def upload_file():
                     h, m = divmod(min_minutes, 60)
                     min_rest = f"{h:02d}:{m:02d}"
 
-                all_pairings.extend(matched)
+                all_pairings.extend(filtered_matched)
                 line_stats.append({
                     "line_number": line["line_number"],
                     "type": line["type"],
@@ -1207,7 +1203,7 @@ def upload_file():
                     "arrival_destinations": list(destinations),
                     "layovers": layovers,
                     "pairings_count": pairings_count,
-                    "pairings": matched,
+                    "pairings": filtered_matched,
                     "minimum_rest": min_rest,
                     "duties": line.get("duties", [])
                 })
