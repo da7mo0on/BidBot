@@ -150,7 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const dayMap = {};
         const occupiedDays = new Set();
     
-        const periodStartDate = new Date(periodStart + "T00:00:00Z"); // تحويل periodStart إلى كائن Date
+        const periodStartDate = new Date(periodStart + "T00:00:00Z");
+        const daysInPeriod = parseInt(document.getElementById('duty-timeline').style.minWidth) / 80;
     
         pairings.forEach(pairing => {
             if (pairing.details !== "Not Found" && pairing.start_date && pairing.end_date) {
@@ -158,16 +159,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     const startDate = new Date(pairing.start_date + "T00:00:00Z");
                     const endDate = new Date(pairing.end_date.endsWith('Z') ? pairing.end_date : pairing.end_date + "Z");
     
-                    // حساب الفرق بالأيام بين start_date و period_start
                     const timeDiff = startDate - periodStartDate;
-                    const dayStart = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // عدد الأيام من period_start
+                    const dayStart = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
                     const endTimeDiff = endDate - periodStartDate;
                     const dayEnd = Math.floor(endTimeDiff / (1000 * 60 * 60 * 24));
                     const isSameDay = startDate.toISOString().split('T')[0] === endDate.toISOString().split('T')[0];
                     const effectiveDayEnd = isSameDay ? dayStart : dayEnd;
     
                     for (let day = dayStart; day <= effectiveDayEnd; day++) {
-                        occupiedDays.add(day + 1); // +1 لأن الأيام في duties تبدأ من 1
+                        occupiedDays.add(day + 1);
                     }
     
                     if (!dayMap[dayStart]) dayMap[dayStart] = { starts: [], ends: [] };
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!isSameDay) dayMap[effectiveDayEnd].ends.push(pairing);
     
                     const margin = 2;
-                    let leftPosition = (80 * dayStart) + margin; // الموقع نسبي لـ period_start
+                    let leftPosition = (80 * dayStart) + margin;
                     let width;
     
                     let reportHour = 0;
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error(`Error rendering pairing #${pairing.number}:`, error);
                 }
             }
-        });
+        }); // إغلاق pairings.forEach (إزالة القوس الزائد هنا)
     
         const otherDuties = [];
         if (Array.isArray(lineDuties)) {
@@ -284,18 +284,54 @@ document.addEventListener('DOMContentLoaded', () => {
                     duties[index] = duty;
                 }
             });
-    
+        
             duties.forEach((duty, index) => {
                 const day = index + 1;
                 if (!occupiedDays.has(day)) {
-                    if (duty && duty !== '-' && duty !== '<' && duty !== '') {
-                        let displayText = duty;
-                        if (duty === '*') {
+                    let shouldDisplay = false;
+                    let displayText = duty;
+        
+                    if (duty && duty !== '<' && duty !== '') {
+                        if (duty !== '-') {
+                            // الدوتي ليست '-'، نتحقق من شروط العرض العادية
+                            shouldDisplay = true;
+                        } else {
+                            // الدوتي هي '-'، نتحقق من الدوتيز المجاورة غير المتجاهلة
+                            // البحث عن أول دوتي سابقة غير متجاهلة (غير ':' أو '-' أو '<' أو فارغة)
+                            let prevValidDuty = null;
+                            for (let i = index - 1; i >= 0; i--) {
+                                const candidateDuty = duties[i];
+                                if (candidateDuty && candidateDuty !== '-' && candidateDuty !== ':' && candidateDuty !== '<' && candidateDuty !== '') {
+                                    prevValidDuty = candidateDuty;
+                                    break;
+                                }
+                            }
+                            // البحث عن أول دوتي تالية غير متجاهلة (غير ':' أو '-' أو '<' أو فارغة)
+                            let nextValidDuty = null;
+                            for (let i = index + 1; i < duties.length; i++) {
+                                const candidateDuty = duties[i];
+                                if (candidateDuty && candidateDuty !== '-' && candidateDuty !== ':' && candidateDuty !== '<' && candidateDuty !== '') {
+                                    nextValidDuty = candidateDuty;
+                                    break;
+                                }
+                            }
+                            const twoLetterNumberPattern = /^[A-Z]{2}\d$/;
+                            if (prevValidDuty && nextValidDuty && twoLetterNumberPattern.test(prevValidDuty) && twoLetterNumberPattern.test(nextValidDuty)) {
+                                // إذا كانت الدوتي '-' بين دالتين تتكون كل منهما من حرفين ورقم، نعرض الدوتي كما هي ('-')
+                                shouldDisplay = true;
+                                displayText = '-';
+                            }
+                        }
+                    }
+        
+                    if (shouldDisplay) {
+                        // معالجة النص المعروض
+                        if (displayText === '*') {
                             displayText = 'OFF';
-                        } else if (duty === 'R') {
+                        } else if (displayText === 'R') {
                             displayText = 'RES';
-                        } else if (/^[A-Z]{3}$/.test(duty) && duty !== 'RES') {
-                            return;
+                        } else if (/^[A-Z]{3}$/.test(displayText) && displayText !== 'RES') {
+                            return; // لا نعرض الدوتيز التي تتكون من 3 حروف (مثل JED) ما لم تكن RES
                         }
                         otherDuties.push({ day, displayText });
                     }
@@ -794,6 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (fridaysSaturdays.length === 0 || !fridaysSaturdays.every(day => duties[day - 1] === '*')) return false;
             }
     
+            const localAirports = ['JED', 'RUH', 'MED', 'NUM', 'DMM'];
             const layoverCities = pairings.flatMap(p => 
                 p.details && p.details !== "Not Found" ? 
                 p.details.split('\n').filter(l => l.includes('LAYOVER')).map(l => l.match(/LAYOVER\s+(\w{3})/)?.[1]) : []
@@ -801,9 +838,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const layoverDurations = pairings.flatMap(p => 
                 p.details && p.details !== "Not Found" ? 
                 p.details.split('\n').filter(l => l.includes('LAYOVER')).map(l => {
-                    const match = l.match(/LAYOVER\s+\w{3}\s+(\d{2}\.\d{2})/);
+                    const match = l.match(/LAYOVER\s+(\w{3})\s+(\d+\.\d{2})/);
                     if (match) {
-                        const [hours, minutes] = match[1].split('.').map(Number);
+                        const city = match[1];
+                        if (localAirports.includes(city)) return null; // تجاهل الـ layovers الداخلية
+                        const [hours, minutes] = match[2].split('.').map(Number);
                         return hours + minutes / 60;
                     }
                     return null;
@@ -812,8 +851,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
             if (desiredLayovers.length > 0 && !desiredLayovers.some(city => layoverCities.includes(city))) return false;
             if (layoverLengths.length > 0) {
-                if (layoverLengths.includes('no-layovers') && layoverDurations.length > 0) return false;
-                if (!layoverLengths.includes('no-layovers') && layoverDurations.length > 0) {
+                if (layoverLengths.includes('no-layovers')) {
+                    if (layoverDurations.length > 0) return false;
+                } else {
+                    if (layoverDurations.length === 0) return false;
                     if (!layoverDurations.every(duration => {
                         return (
                             (layoverLengths.includes('less-24') && duration < 24) ||
@@ -836,9 +877,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const duties = data.duties || [];
                 if (!desiredDaysOff.every(day => duties[day - 1] === '*')) return false;
             }
-            if (pairings.length > 0) {
+            if (reportTimeMin !== undefined || reportTimeMax !== undefined) {
+                if (pairings.length === 0) return false;
                 const reportTimes = pairings.map(p => p.report_time ? parseTime(p.report_time) : null).filter(Boolean);
-                if (reportTimes.length > 0 && !reportTimes.every(time => time >= reportTimeMin && time <= reportTimeMax)) return false;
+                if (reportTimes.length === 0) return false;
+                if (!reportTimes.every(time => time >= reportTimeMin && time <= reportTimeMax)) return false;
             }
     
             const fourLegs = data.four_legs_count || 0;
@@ -856,7 +899,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         linesTableBody.innerHTML = '';
         filteredLines.forEach(line => linesTableBody.appendChild(line.row));
-        currentFilteredRows = filteredLines.map(line => line.row); // تحديث الـ Rows المفلترة
+        currentFilteredRows = filteredLines.map(line => line.row);
         attachRowListeners();
     
         Array.from(linesTableBody.querySelectorAll('tr')).forEach(row => {
@@ -1260,42 +1303,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // دالة تحديث جدول الأيام في Bid Sheet
     function updateBidDutyTimeline(pairings, lineDuties) {
         const bidDutyTimeline = document.getElementById('bid-duty-timeline');
-        resetBidDutyTimeline(); // تهيئة جدول الأيام
-
+        resetBidDutyTimeline();
+    
         const localAirports = ['JED', 'RUH', 'MED', 'NUM', 'DMM'];
         const dayMap = {};
         const occupiedDays = new Set();
-
-        const periodStartDate = new Date(periodStart + "T00:00:00Z"); // تحويل periodStart إلى كائن Date
+    
+        const periodStartDate = new Date(periodStart + "T00:00:00Z");
         const daysInPeriod = parseInt(bidDutyTimeline.style.minWidth) / 80;
-
+    
         pairings.forEach(pairing => {
             if (pairing.details !== "Not Found" && pairing.start_date && pairing.end_date) {
                 try {
                     const startDate = new Date(pairing.start_date + "T00:00:00Z");
                     const endDate = new Date(pairing.end_date.endsWith('Z') ? pairing.end_date : pairing.end_date + "Z");
-
-                    // حساب الفرق بالأيام بين start_date و period_start
+    
                     const timeDiff = startDate - periodStartDate;
                     const dayStart = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
                     const endTimeDiff = endDate - periodStartDate;
                     const dayEnd = Math.floor(endTimeDiff / (1000 * 60 * 60 * 24));
                     const isSameDay = startDate.toISOString().split('T')[0] === endDate.toISOString().split('T')[0];
                     const effectiveDayEnd = isSameDay ? dayStart : dayEnd;
-
+    
                     for (let day = dayStart; day <= effectiveDayEnd; day++) {
-                        occupiedDays.add(day + 1); // +1 لأن الأيام في duties تبدأ من 1
+                        occupiedDays.add(day + 1);
                     }
-
+    
                     if (!dayMap[dayStart]) dayMap[dayStart] = { starts: [], ends: [] };
                     if (!isSameDay && !dayMap[effectiveDayEnd]) dayMap[effectiveDayEnd] = { starts: [], ends: [] };
                     dayMap[dayStart].starts.push(pairing);
                     if (!isSameDay) dayMap[effectiveDayEnd].ends.push(pairing);
-
+    
                     const margin = 2;
                     let leftPosition = (80 * dayStart) + margin;
                     let width;
-
+    
                     let reportHour = 0;
                     if (pairing.report_time) {
                         const reportTime = pairing.report_time;
@@ -1306,9 +1348,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         reportHour = startDate.getUTCHours() + startDate.getUTCMinutes() / 60;
                     }
-
+    
                     const endHour = endDate.getUTCHours() + endDate.getUTCMinutes() / 60;
-
+    
                     if (isSameDay) {
                         if (reportHour >= 12) {
                             leftPosition += 40;
@@ -1323,7 +1365,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         width = (fullDaysBetween >= 0 ? fullDaysBetween * 80 : 0) + (reportHour >= 12 ? 40 : 80) + (endHour < 12 ? 40 : 80) - (2 * margin);
                         leftPosition += (reportHour >= 12 ? 40 : 0);
                     }
-
+    
                     const duty = document.createElement('div');
                     duty.className = 'duty Flight';
                     duty.style.left = `${leftPosition}px`;
@@ -1332,7 +1374,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     duty.style.top = '4px';
                     duty.style.height = '26px';
                     duty.dataset.pairingNo = pairing.number;
-
+    
                     let displayText = pairing.number;
                     if (pairing.details) {
                         const lines = pairing.details.split('\n');
@@ -1347,7 +1389,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 layovers.push({ city, duration });
                             }
                         }
-
+    
                         let firstDestination = '';
                         for (const line of lines) {
                             const flightMatch = line.match(/^[A-Z]{2}\s+(?:DH)?\d{3,4}\s+\w{3}\s+\d{2}\.\d{2}\s+\w{3}\s+\d{2}\.\d{2}\s+(\w{3})/);
@@ -1356,7 +1398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 break;
                             }
                         }
-
+    
                         if (layovers.length > 0) {
                             const hasInternationalLayover = layovers.some(layover => !localAirports.includes(layover.city));
                             if (hasInternationalLayover) {
@@ -1377,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             displayText = firstDestination;
                         }
                     }
-
+    
                     duty.textContent = displayText;
                     duty.addEventListener('click', () => showBidPairingDetails(pairing));
                     bidDutyTimeline.appendChild(duty);
@@ -1385,8 +1427,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error(`Error rendering pairing #${pairing.number}:`, error);
                 }
             }
-        });
-
+        }); // إغلاق pairings.forEach (إزالة القوس الزائد هنا)
+    
         const otherDuties = [];
         if (Array.isArray(lineDuties)) {
             const duties = Array(daysInPeriod).fill(null);
@@ -1395,33 +1437,69 @@ document.addEventListener('DOMContentLoaded', () => {
                     duties[index] = duty;
                 }
             });
-
+        
             duties.forEach((duty, index) => {
                 const day = index + 1;
                 if (!occupiedDays.has(day)) {
-                    if (duty && duty !== '-' && duty !== '<' && duty !== '') {
-                        let displayText = duty;
-                        if (duty === '*') {
+                    let shouldDisplay = false;
+                    let displayText = duty;
+        
+                    if (duty && duty !== '<' && duty !== '') {
+                        if (duty !== '-') {
+                            // الدوتي ليست '-'، نتحقق من شروط العرض العادية
+                            shouldDisplay = true;
+                        } else {
+                            // الدوتي هي '-'، نتحقق من الدوتيز المجاورة غير المتجاهلة
+                            // البحث عن أول دوتي سابقة غير متجاهلة (غير ':' أو '-' أو '<' أو فارغة)
+                            let prevValidDuty = null;
+                            for (let i = index - 1; i >= 0; i--) {
+                                const candidateDuty = duties[i];
+                                if (candidateDuty && candidateDuty !== '-' && candidateDuty !== ':' && candidateDuty !== '<' && candidateDuty !== '') {
+                                    prevValidDuty = candidateDuty;
+                                    break;
+                                }
+                            }
+                            // البحث عن أول دوتي تالية غير متجاهلة (غير ':' أو '-' أو '<' أو فارغة)
+                            let nextValidDuty = null;
+                            for (let i = index + 1; i < duties.length; i++) {
+                                const candidateDuty = duties[i];
+                                if (candidateDuty && candidateDuty !== '-' && candidateDuty !== ':' && candidateDuty !== '<' && candidateDuty !== '') {
+                                    nextValidDuty = candidateDuty;
+                                    break;
+                                }
+                            }
+                            const twoLetterNumberPattern = /^[A-Z]{2}\d$/;
+                            if (prevValidDuty && nextValidDuty && twoLetterNumberPattern.test(prevValidDuty) && twoLetterNumberPattern.test(nextValidDuty)) {
+                                // إذا كانت الدوتي '-' بين دالتين تتكون كل منهما من حرفين ورقم، نعرض الدوتي كما هي ('-')
+                                shouldDisplay = true;
+                                displayText = '-';
+                            }
+                        }
+                    }
+        
+                    if (shouldDisplay) {
+                        // معالجة النص المعروض
+                        if (displayText === '*') {
                             displayText = 'OFF';
-                        } else if (duty === 'R') {
+                        } else if (displayText === 'R') {
                             displayText = 'RES';
-                        } else if (/^[A-Z]{3}$/.test(duty) && duty !== 'RES') {
-                            return;
+                        } else if (/^[A-Z]{3}$/.test(displayText) && displayText !== 'RES') {
+                            return; // لا نعرض الدوتيز التي تتكون من 3 حروف (مثل JED) ما لم تكن RES
                         }
                         otherDuties.push({ day, displayText });
                     }
                 }
             });
         }
-
+    
         otherDuties.forEach(duty => {
             const day = duty.day;
             const displayText = duty.displayText;
-
+    
             const margin = 2;
             const leftPosition = (80 * (day - 1)) + margin;
             const width = 80 - (2 * margin);
-
+    
             const dutyElement = document.createElement('div');
             dutyElement.className = `duty ${displayText === 'OFF' ? 'DaysOff' : displayText === 'RES' ? 'StandBy' : 'Unknown'}`;
             dutyElement.style.left = `${leftPosition}px`;
@@ -1430,7 +1508,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dutyElement.style.top = '4px';
             dutyElement.style.height = '26px';
             dutyElement.textContent = displayText;
-
+    
             bidDutyTimeline.appendChild(dutyElement);
         });
     }
