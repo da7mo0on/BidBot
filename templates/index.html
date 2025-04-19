@@ -26,14 +26,18 @@
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="BidBot Logo" class="header-logo">
             <div class="header-title">
                 <h1>BidBot</h1>
-                <span class="separator">|</span>
-                <span class="info-item">Rank: {% if metadata and metadata.Rank %}{{ metadata.Rank }}{% endif %}</span>
-                <span class="separator">|</span>
-                <span class="info-item">Fleet: {% if metadata and metadata.Fleet %}{{ metadata.Fleet }}{% endif %}</span>
-                <span class="separator">|</span>
-                <span class="info-item">Base: {% if metadata and metadata.Base %}{{ metadata.Base }}{% endif %}</span>
-                <span class="separator">|</span>
-                <span class="info-item">Period: {% if month_name and year %}{{ month_name }} {{ year }}{% endif %}</span>
+                {% if metadata and metadata.Rank %}
+                    <span class="info-item">{{ metadata.Rank }}</span>
+                {% endif %}
+                {% if metadata and metadata.Fleet and metadata['User Type'] == 'pilot' %}
+                <span class="info-item">{{ metadata.Fleet }}</span>
+                {% endif %}
+                {% if metadata and metadata.Base %}
+                    <span class="info-item">{{ metadata.Base }}</span>
+                {% endif %}
+                {% if month_name and year %}
+                    <span class="info-item">{{ month_name }} {{ year }}</span>
+                {% endif %}
             </div>
         </div>
     </header>
