@@ -430,7 +430,8 @@
         </table>
     </section>
     <script>
-        const periodStart = "{{ period_start }}";
+        window.periodStart = "{{ period_start }}";
+        window.periodEnd = "{{ metadata['Period End'] | replace('.', '-') }}";
     </script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </html>

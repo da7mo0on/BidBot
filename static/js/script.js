@@ -815,19 +815,57 @@ document.addEventListener('DOMContentLoaded', () => {
             if (hideDeadhead && data.deadheads > 0) return false;
             if (weekendsOff) {
                 const duties = data.duties || [];
-                const daysHeader = Array.from(document.querySelectorAll('.duty-timeline-header .day span'));
-                const startDate = new Date('2025-04-01');
-                const fridaysSaturdays = daysHeader
-                    .map((span, index) => {
-                        const date = new Date(startDate);
-                        date.setDate(date.getDate() + index);
-                        const weekday = date.toLocaleString('en-US', { weekday: 'short' });
-                        return { index: index + 1, weekday };
-                    })
-                    .filter(day => day.weekday === 'Fri' || day.weekday === 'Sat')
-                    .map(day => day.index)
-                    .filter(index => index <= duties.length);
-                if (fridaysSaturdays.length === 0 || !fridaysSaturdays.every(day => duties[day - 1] === '*')) return false;
+                const periodStart = new Date(window.periodStart);
+                const periodEndParts = window.periodEnd.split('-');
+                const periodEnd = new Date(`${periodEndParts[2]}-${periodEndParts[1]}-${periodEndParts[0]}`);
+                let maxEndDate = periodEnd;
+            
+                if (data.carry_over > 0) {
+                    pairings.forEach(p => {
+                        if (p.end_date) {
+                            const endDate = new Date(p.end_date);
+                            if (endDate > maxEndDate) maxEndDate = endDate;
+                        }
+                    });
+                }
+            
+                const fridaysSaturdays = [];
+                let currentDate = new Date(periodStart);
+                let index = 0;
+                while (currentDate <= maxEndDate && index < duties.length) {
+                    const weekday = currentDate.toLocaleString('en-US', { weekday: 'short' });
+                    if (weekday === 'Fri' || weekday === 'Sat') {
+                        fridaysSaturdays.push(index + 1);
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    index++;
+                }
+            
+                if (fridaysSaturdays.length === 0 || !fridaysSaturdays.every(day => {
+                    const duty = duties[day - 1];
+                    if (duty === '*') return true;
+                    if (duty === '-') {
+                        let prevValidDuty = null;
+                        for (let i = day - 2; i >= 0; i--) {
+                            const candidateDuty = duties[i];
+                            if (candidateDuty && candidateDuty !== '-' && candidateDuty !== ':' && candidateDuty !== '<' && candidateDuty !== '') {
+                                prevValidDuty = candidateDuty;
+                                break;
+                            }
+                        }
+                        let nextValidDuty = null;
+                        for (let i = day; i < duties.length; i++) {
+                            const candidateDuty = duties[i];
+                            if (candidateDuty && candidateDuty !== '-' && candidateDuty !== ':' && candidateDuty !== '<' && candidateDuty !== '') {
+                                nextValidDuty = candidateDuty;
+                                break;
+                            }
+                        }
+                        const twoLetterNumberPattern = /^[A-Z]{2}\d$/;
+                        return prevValidDuty && nextValidDuty && twoLetterNumberPattern.test(prevValidDuty) && twoLetterNumberPattern.test(nextValidDuty);
+                    }
+                    return false;
+                })) return false;
             }
     
             const localAirports = ['JED', 'RUH', 'MED', 'NUM', 'DMM'];
@@ -875,7 +913,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (daysOff < daysOffMin || daysOff > daysOffMax) return false;
             if (desiredDaysOff.length > 0) {
                 const duties = data.duties || [];
-                if (!desiredDaysOff.every(day => duties[day - 1] === '*')) return false;
+                if (!desiredDaysOff.every(day => {
+                    const duty = duties[day - 1];
+                    if (duty === '*') return true; // إجازة عادية
+                    if (duty === '-') {
+                        // التحقق إذا كانت - بين دوتيز بحرفين ورقم
+                        let prevValidDuty = null;
+                        for (let i = day - 2; i >= 0; i--) {
+                            const candidateDuty = duties[i];
+                            if (candidateDuty && candidateDuty !== '-' && candidateDuty !== ':' && candidateDuty !== '<' && candidateDuty !== '') {
+                                prevValidDuty = candidateDuty;
+                                break;
+                            }
+                        }
+                        let nextValidDuty = null;
+                        for (let i = day; i < duties.length; i++) {
+                            const candidateDuty = duties[i];
+                            if (candidateDuty && candidateDuty !== '-' && candidateDuty !== ':' && candidateDuty !== '<' && candidateDuty !== '') {
+                                nextValidDuty = candidateDuty;
+                                break;
+                            }
+                        }
+                        const twoLetterNumberPattern = /^[A-Z]{2}\d$/;
+                        return prevValidDuty && nextValidDuty && twoLetterNumberPattern.test(prevValidDuty) && twoLetterNumberPattern.test(nextValidDuty);
+                    }
+                    return false;
+                })) return false;
             }
             if (reportTimeMin !== undefined || reportTimeMax !== undefined) {
                 if (pairings.length === 0) return false;
