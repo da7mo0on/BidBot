@@ -1162,8 +1162,95 @@ document.addEventListener('DOMContentLoaded', () => {
         let lastTargetRow = null;
         let touchStartX = 0;
         let touchStartY = 0;
+        let touchStartTime = 0;
+        let isDragging = false;
+        const touchThreshold = 10; // عتبة الحركة بالبكسل
+        const longPressThreshold = 300; // زمن الضغط الطويل (بالمللي ثانية)
     
-        // دعم أجهزة الماوس (Drag and Drop)
+        bidLinesTableBody.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchStartTime = Date.now();
+            draggedRow = e.target.closest('tr');
+            isDragging = false;
+    
+            if (draggedRow) {
+                // تأخير للتحقق من الضغط الطويل
+                setTimeout(() => {
+                    if (!isDragging && draggedRow) {
+                        isDragging = true;
+                        draggedRow.classList.add('dragging');
+                        placeholder = document.createElement('tr');
+                        placeholder.className = 'drag-placeholder';
+                        placeholder.innerHTML = '<td colspan="12"></td>';
+                    }
+                }, longPressThreshold);
+            }
+        });
+    
+        bidLinesTableBody.addEventListener('touchmove', (e) => {
+            if (!draggedRow) return;
+    
+            const touch = e.touches[0];
+            const deltaX = Math.abs(touch.clientX - touchStartX);
+            const deltaY = Math.abs(touch.clientY - touchStartY);
+    
+            // إذا كانت الحركة رأسية بشكل أساسي ولم يتم تفعيل السحب بعد، السماح بالتمرير
+            if (!isDragging && deltaY > deltaX && deltaY > touchThreshold) {
+                return; // لا نمنع السلوك الافتراضي للسماح بالتمرير
+            }
+    
+            e.preventDefault(); // منع التمرير فقط عند السحب
+            isDragging = true;
+    
+            const touchX = touch.clientX;
+            const touchY = touch.clientY;
+    
+            const targetRow = document.elementFromPoint(touchX, touchY)?.closest('tr');
+            if (targetRow && targetRow !== draggedRow && !targetRow.classList.contains('details-row')) {
+                if (lastTargetRow !== targetRow) {
+                    lastTargetRow = targetRow;
+                    if (placeholder && placeholder.parentNode) {
+                        placeholder.parentNode.removeChild(placeholder);
+                    }
+                    const rect = targetRow.getBoundingClientRect();
+                    const midY = rect.top + (rect.height / 2);
+                    if (touchY < midY) {
+                        targetRow.parentNode.insertBefore(placeholder, targetRow);
+                    } else {
+                        targetRow.parentNode.insertBefore(placeholder, targetRow.nextSibling);
+                    }
+                    setTimeout(() => {
+                        placeholder.classList.add('visible');
+                    }, 10);
+                }
+            }
+        });
+    
+        bidLinesTableBody.addEventListener('touchend', (e) => {
+            if (draggedRow && isDragging && placeholder && placeholder.parentNode) {
+                const touch = e.changedTouches[0];
+                const touchX = touch.clientX;
+                const touchY = touch.clientY;
+                const targetRow = document.elementFromPoint(touchX, touchY)?.closest('tr');
+                if (targetRow && draggedRow !== targetRow && !targetRow.classList.contains('details-row')) {
+                    document.querySelectorAll('.details-row').forEach(detailsRow => detailsRow.remove());
+                    placeholder.parentNode.insertBefore(draggedRow, placeholder);
+                    placeholder.parentNode.removeChild(placeholder);
+                    updateCopyLines();
+                }
+            }
+            if (draggedRow) {
+                draggedRow.classList.remove('dragging');
+            }
+            draggedRow = null;
+            placeholder = null;
+            lastTargetRow = null;
+            isDragging = false;
+        });
+    
+        // أحداث الماوس (دون تغيير)
         bidLinesTableBody.addEventListener('dragstart', (e) => {
             draggedRow = e.target.closest('tr');
             e.dataTransfer.effectAllowed = 'move';
@@ -1223,66 +1310,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastTargetRow = null;
                 updateCopyLines();
             }
-        });
-    
-        // دعم أجهزة اللمس (Touch Devices مثل الآيباد)
-        bidLinesTableBody.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            draggedRow = e.target.closest('tr');
-            if (draggedRow) {
-                draggedRow.classList.add('dragging'); // إضافة كلاس لتحديد الصف اللي بيتحرك
-                placeholder = document.createElement('tr');
-                placeholder.className = 'drag-placeholder';
-                placeholder.innerHTML = '<td colspan="12"></td>';
-            }
-        });
-    
-        bidLinesTableBody.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // منع التمرير الافتراضي أثناء اللمس
-            const touch = e.touches[0];
-            const touchX = touch.clientX;
-            const touchY = touch.clientY;
-    
-            const targetRow = document.elementFromPoint(touchX, touchY)?.closest('tr');
-            if (targetRow && targetRow !== draggedRow && !targetRow.classList.contains('details-row')) {
-                if (lastTargetRow !== targetRow) {
-                    lastTargetRow = targetRow;
-                    if (placeholder && placeholder.parentNode) {
-                        placeholder.parentNode.removeChild(placeholder);
-                    }
-                    const rect = targetRow.getBoundingClientRect();
-                    const midY = rect.top + (rect.height / 2);
-                    if (touchY < midY) {
-                        targetRow.parentNode.insertBefore(placeholder, targetRow);
-                    } else {
-                        targetRow.parentNode.insertBefore(placeholder, targetRow.nextSibling);
-                    }
-                    setTimeout(() => {
-                        placeholder.classList.add('visible');
-                    }, 10);
-                }
-            }
-        });
-    
-        bidLinesTableBody.addEventListener('touchend', (e) => {
-            if (draggedRow && placeholder && placeholder.parentNode) {
-                const touch = e.changedTouches[0];
-                const touchX = touch.clientX;
-                const touchY = touch.clientY;
-                const targetRow = document.elementFromPoint(touchX, touchY)?.closest('tr');
-                if (targetRow && draggedRow !== targetRow && !targetRow.classList.contains('details-row')) {
-                    document.querySelectorAll('.details-row').forEach(detailsRow => detailsRow.remove());
-                    placeholder.parentNode.insertBefore(draggedRow, placeholder);
-                    placeholder.parentNode.removeChild(placeholder);
-                    updateCopyLines();
-                }
-            }
-            draggedRow?.classList.remove('dragging');
-            draggedRow = null;
-            placeholder = null;
-            lastTargetRow = null;
         });
     }
 

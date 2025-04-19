@@ -598,11 +598,20 @@ header h1 {
 
 
 #bidSheetModal .modal-body {
-    padding: 0 !important;
-    margin: 0 !important;
-    display: flex;
-    flex-direction: column;
-    gap: 0; /* إزالة أي فراغات بين العناصر */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* تحسين التمرير على Safari */
+    touch-action: pan-y; /* السماح بالتمرير الرأسي فقط */
+}
+
+/* التأكد من أن الجدول نفسه قابل للتمرير */
+#bid-lines-table {
+    width: 100%;
+    table-layout: fixed; /* لضمان تناسق العرض */
+}
+
+/* تحسين العرض للصفوف */
+#bid-lines-table tr {
+    height: 34px; /* التأكد من ارتفاع موحد */
 }
 
 #bidSheetModal .controls {
@@ -626,15 +635,15 @@ header h1 {
 }
 
 .drag-placeholder {
-    background-color: #e0e0e0; /* لون خلفية واضح للعنصر الوهمي */
-    height: 34px; /* نفس ارتفاع الصف في الجدول */
-    border: 2px dashed #999; /* حدود منقطة للتمييز */
-    opacity: 0; /* البداية بشفافية 0 */
-    transition: opacity 0.2s ease, transform 0.2s ease; /* تأثير انتقال للسلاسة */
+    background-color: #e0e0e0;
+    height: 34px;
+    border: 2px dashed #999;
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
 .drag-placeholder.visible {
-    opacity: 0.5; /* الشفافية عند الظهور */
+    opacity: 0.7; /* الشفافية عند الظهور */
 }
 
 /* تنسيق زر Clear Lines */
@@ -648,13 +657,16 @@ header h1 {
 }
 
 .dragging {
-    opacity: 0.5; /* تقليل الشفافية أثناء السحب */
-    background-color: #e0e0e0; /* لون خلفية للتمييز */
+    opacity: 0.6;
+    background-color: #d3e7ff; /* لون خلفية مميز */
+    z-index: 100; /* التأكد من أن الصف المسحوب فوق الآخرين */
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    transform: scale(1.02); /* تكبير طفيف للتمييز */
 }
 
 /* منع تحديد النص أثناء اللمس */
 #bid-lines-table-body tr {
-    -webkit-user-select: none; /* منع التحديد على Safari */
+    -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
